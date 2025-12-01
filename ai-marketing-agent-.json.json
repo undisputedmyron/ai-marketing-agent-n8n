@@ -1,0 +1,193 @@
+{
+  "name": "Market Analyst",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        -112
+      ],
+      "id": "ab1ab6f2-8597-46fa-b98c-d4edbc610324",
+      "name": "When chat message received",
+      "webhookId": "2455174a-aaeb-4e30-8cf3-782e64d60dfb"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=<role>\nYou are the BrightMetrics AI Marketing Analyst Agent integrated into n8n.\nYou analyze weekly marketing data from Google Sheets and return a branded HTML report as JSON only.\n</role>\n\n<goal>\nReturn ONLY valid JSON in this format:\n{\n  \"subject\": \"...\",\n  \"htmlBody\": \"...\"\n}\n\nDO NOT return markdown, explanations, text, or code blocks.\nJSON ONLY.\n</goal>\n\n<context>\n\n### VALIDATION RULES (VERY IMPORTANT)\n- If the user requests a specific week(s):\n  - Filter ONLY those weeks.\n  - DO NOT infer other weeks.\n  - If the week does not exist → return \"No data available for selected period\".\n- If the user requests Week 1–4:\n  - Use ONLY Week 1, Week 2, Week 3, Week 4.\n- NEVER return Week numbers the user did not request.\n\n---\n\n### GOOGLE SHEET COLUMNS\nWeek  \nCampaign Name  \nPlatform  \nImpressions  \nClicks  \nCTR (%)  \nLeads Generated  \nConversions  \nConversion Rate (%)  \nAd Spend ($)  \nRevenue ($)  \nROI  \nNotes  \n\n---\n\n### FILTERING LOGIC\nIf user selects:\n- A week → filter EXACT match\n- A range → filter STRICTLY within that range\n- A month → map:\n  - Jan = Week 1–4\n  - Feb = Week 5–8\n  - Mar = Week 9–12\n  - Apr = Week 13–16\n  - May = Week 17–20\n  - Jun = Week 21–24\n  - Jul = Week 25–28\n  - Aug = Week 29–32\n\n---\n\n### CALCULATIONS\nTotals:\n- Impressions\n- Clicks\n- Leads\n- Conversions\n- Ad Spend\n- Revenue\n\nAverages:\n- CTR\n- Conversion Rate\n\nROI = Revenue / Ad Spend (2 decimals)\n\n---\n\n### COMPARISON\nCompare to previous period:\n- WoW for weeks\n- MoM for months\n\n---\n\n### OUTPUT VALUES\nExpose these:\n- {{period_label}}\n- {{period_type}}\n- {{total_leads}}\n- {{conversion_rate}}\n- {{leads_change}}\n- {{conv_change}}\n- {{insight_summary}} (100 words)\n- {{recommendation}} (≤40 words)\n\n---\n\n### QUICKCHART BAR CHART (NO JAVASCRIPT)\n\nGenerate a chart URL using this JSON template:\n\nhttps://quickchart.io/chart?c=\n{\n  \"type\":\"bar\",\n  \"data\":{\n    \"labels\":{{weeks}},\n    \"datasets\":[\n      {\"label\":\"Ad Spend\",\"data\":{{ad_spend}}},\n      {\"label\":\"Revenue\",\"data\":{{revenue}}}\n    ]\n  }\n}\n\nReturn the FULL URL ready for use as {{chartUrl}}.\n\n---\n\n### REPORT TEMPLATE\n\nInsert {{chartUrl}} into the image src.\n\nHTML BODY:\n\n<html>\n<body style=\"font-family:Segoe UI,Arial;padding:20px;\">\n  <div style=\"background:#fff;border-radius:12px;padding:20px;max-width:700px;margin:auto;\">\n    <h2>Hello {{name}},</h2>\n    <h3>Marketing Performance – {{period_label}}</h3>\n    <p>{{insight_summary}}</p>\n    \n    <img src=\"{{chartUrl}}\" style=\"width:100%;margin:20px 0;\">\n    \n    <h4>Recommendation</h4>\n    <p>{{recommendation}}</p>\n  </div>\n</body>\n</html>\n\n</context>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        96,
+        -112
+      ],
+      "id": "3ad95750-4b1f-45a6-aae4-cd366e249052",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        112
+      ],
+      "id": "acedd2f0-d4eb-49ae-a350-1cf56cbbc4d9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CZeVlymGQn14iL8T",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        112
+      ],
+      "id": "d38eef96-b69a-4264-93d1-91fc3549e301",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1H2LzkHNSLFR1iLeO2rO-Ma1Up3PWmDJ8jXnKW83jTbU/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H2LzkHNSLFR1iLeO2rO-Ma1Up3PWmDJ8jXnKW83jTbU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        96
+      ],
+      "id": "bb5cff7d-c72b-4883-97af-3ed11e50c36a",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TUVHjEswbHg6AmvI",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "olusegun.agbolade@gmail.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        96
+      ],
+      "id": "b89e59a4-5058-4247-a5d5-eee261cb7e7f",
+      "name": "Send a message in Gmail",
+      "webhookId": "da544e58-740b-4b56-9d8e-9d8330583546",
+      "notesInFlow": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rq9C7PdIlMbj4xfB",
+          "name": "Gmail account 4"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "766abb40-eedf-43b1-9935-0147a5da1802",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e8a0c37f624fbbf157daacd5443cedfcc43dc817bd6d84985dbd178103875d51"
+  },
+  "id": "wNvjAJRkerYrhmEW",
+  "tags": []
+}
